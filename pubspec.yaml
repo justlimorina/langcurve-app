@@ -1,0 +1,50 @@
+name: langcurve
+description: "LangCurve - Material 3 English Vocabulary Learning App with SuperMemo SM-2, Dictionary, and Curve Analytics for Windows, Android, and iOS."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  provider: ^6.1.2
+
+  # Local Database (Multi-platform SQLite)
+  sqflite: ^2.3.3+1
+  sqflite_common_ffi: ^2.3.3
+  path_provider: ^2.1.3
+  path: ^1.9.0
+
+  # Networking & APIs
+  http: ^1.2.1
+
+  # Data Visualization (Learning Curve)
+  fl_chart: ^0.68.0
+
+  # Audio Pronunciation
+  audioplayers: ^6.0.0
+
+  # External Links & Video Launcher
+  url_launcher: ^6.2.6
+
+  # JSON Export / Import File Picker
+  file_picker: ^8.0.3
+
+  # Preferences & Storage
+  shared_preferences: ^2.2.3
+
+  # UI Icons & Styling
+  material_symbols_icons: ^4.2776.0
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
