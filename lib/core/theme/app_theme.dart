@@ -18,7 +18,7 @@ class AppTheme {
       colorScheme: colorScheme,
       brightness: colorScheme.brightness,
       scaffoldBackgroundColor: colorScheme.surface,
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: colorScheme.surfaceContainerLow,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -118,7 +118,7 @@ class AppTheme {
         ),
         side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
       ),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: colorScheme.surfaceContainerHigh,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),

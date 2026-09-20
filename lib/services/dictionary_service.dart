@@ -36,7 +36,7 @@ class DictionaryService {
           final altUri = Uri.parse('${ApiEndpoints.freeDictionaryBase}/${Uri.encodeComponent(clean)}');
           final altResponse = await http.get(altUri).timeout(const Duration(seconds: 8));
           if (altResponse.statusCode == 200) {
-            return _parseEntry(clean, jsonDecode(altResponse.body));
+            return await _parseEntry(clean, jsonDecode(altResponse.body));
           }
         }
         // Fallback: build minimal entry with Google TTS and Translation
