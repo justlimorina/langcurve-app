@@ -16,7 +16,7 @@ class WordDetailCard extends StatelessWidget {
     required this.onSaved,
   });
 
-  void _showSaveToNotebookDialog(BuildContext context) {
+  void _showSaveToNotebookDialog(BuildContext context, {int? initialTopicId}) {
     final appState = Provider.of<AppStateProvider>(context, listen: false);
     final topics = appState.topics;
 
@@ -27,15 +27,36 @@ class WordDetailCard extends StatelessWidget {
       return;
     }
 
-    int selectedTopicId = topics.first.id!;
+    final savedVocab = appState.getSavedVocabulary(entry.word);
+    final isSaved = savedVocab != null;
+
+    int selectedTopicId = initialTopicId ??
+        savedVocab?.topicId ??
+        (topics.first.id ?? 1);
+
+    // If selectedTopicId doesn't exist in topics list, pick first
+    if (!topics.any((t) => t.id == selectedTopicId)) {
+      selectedTopicId = topics.first.id!;
+    }
+
     String firstDef = '';
     String firstPos = '';
 
     if (entry.meanings.isNotEmpty) {
       firstPos = entry.meanings.first.partOfSpeech;
-      if (entry.meanings.first.definitions.isNotEmpty) {
-        firstDef = entry.meanings.first.definitions.first.definition;
+      for (final m in entry.meanings) {
+        if (m.definitions.isNotEmpty) {
+          final d = m.definitions.first;
+          firstDef = (d.vietnameseTranslation != null && d.vietnameseTranslation!.isNotEmpty)
+              ? '${d.definition} (${d.vietnameseTranslation})'
+              : d.definition;
+          firstPos = m.partOfSpeech;
+          break;
+        }
       }
+    }
+    if (firstDef.isEmpty && entry.vietnameseMeaning != null) {
+      firstDef = entry.vietnameseMeaning!;
     }
 
     showDialog(
@@ -46,9 +67,12 @@ class WordDetailCard extends StatelessWidget {
             return AlertDialog(
               title: Row(
                 children: [
-                  Icon(Icons.bookmark_add_outlined, color: Theme.of(context).colorScheme.primary),
+                  Icon(
+                    isSaved ? Icons.bookmark_added : Icons.bookmark_add_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   const SizedBox(width: 8),
-                  const Text('Lưu vào Notebook'),
+                  Text(isSaved ? 'Đổi chủ đề / Cập nhật' : 'Lưu vào Notebook'),
                 ],
               ),
               content: Column(
@@ -63,6 +87,17 @@ class WordDetailCard extends StatelessWidget {
                       color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
+                  if (isSaved) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Đã lưu trong: "${savedVocab.topicName ?? 'Chủ đề'}"',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Theme.of(context).colorScheme.secondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   const Text(
                     'Chọn chủ đề lưu trữ:',
@@ -102,23 +137,31 @@ class WordDetailCard extends StatelessWidget {
                 ),
                 FilledButton(
                   onPressed: () async {
-                    await appState.saveVocabulary(
-                      topicId: selectedTopicId,
-                      word: entry.word,
-                      definition: firstDef,
-                      partOfSpeech: firstPos,
-                      phoneticUk: entry.phoneticUk,
-                      audioUrlUk: entry.audioUrlUk,
-                      phoneticUs: entry.phoneticUs,
-                      audioUrlUs: entry.audioUrlUs,
-                      cefrLevel: entry.cefrLevel,
-                      synonyms: entry.synonyms,
-                      antonyms: entry.antonyms,
-                    );
-                    if (ctx.mounted) Navigator.of(ctx).pop();
-                    onSaved();
+                    try {
+                      await appState.saveVocabulary(
+                        topicId: selectedTopicId,
+                        word: entry.word,
+                        definition: firstDef,
+                        partOfSpeech: firstPos,
+                        phoneticUk: entry.phoneticUk,
+                        audioUrlUk: entry.audioUrlUk,
+                        phoneticUs: entry.phoneticUs,
+                        audioUrlUs: entry.audioUrlUs,
+                        cefrLevel: entry.cefrLevel,
+                        synonyms: entry.synonyms,
+                        antonyms: entry.antonyms,
+                      );
+                      if (ctx.mounted) Navigator.of(ctx).pop();
+                      onSaved();
+                    } catch (e) {
+                      if (ctx.mounted) {
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          SnackBar(content: Text('Lỗi khi lưu từ: $e')),
+                        );
+                      }
+                    }
                   },
-                  child: const Text('Lưu từ này'),
+                  child: Text(isSaved ? 'Cập nhật' : 'Lưu từ này'),
                 ),
               ],
             );
@@ -131,6 +174,9 @@ class WordDetailCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final appState = Provider.of<AppStateProvider>(context);
+    final savedVocab = appState.getSavedVocabulary(entry.word);
+    final isSaved = savedVocab != null;
 
     return Card(
       elevation: 0,
@@ -190,11 +236,30 @@ class WordDetailCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                FilledButton.tonalIcon(
-                  onPressed: () => _showSaveToNotebookDialog(context),
-                  icon: const Icon(Icons.bookmark_add, size: 18),
-                  label: const Text('Lưu vào Notebook'),
-                ),
+                if (isSaved)
+                  FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      foregroundColor: theme.colorScheme.onPrimaryContainer,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                    onPressed: () => _showSaveToNotebookDialog(context, initialTopicId: savedVocab.topicId),
+                    icon: const Icon(Icons.bookmark_added, size: 18),
+                    label: Text(
+                      savedVocab.topicName != null && savedVocab.topicName!.isNotEmpty
+                          ? 'Đã lưu (${savedVocab.topicName})'
+                          : 'Đã lưu vào Notebook',
+                    ),
+                  )
+                else
+                  FilledButton.tonalIcon(
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                    onPressed: () => _showSaveToNotebookDialog(context),
+                    icon: const Icon(Icons.bookmark_add, size: 18),
+                    label: const Text('Lưu vào Notebook'),
+                  ),
               ],
             ),
 

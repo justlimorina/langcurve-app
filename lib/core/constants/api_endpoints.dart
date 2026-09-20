@@ -2,6 +2,14 @@ class ApiEndpoints {
   // Free Dictionary API
   static const String freeDictionaryBase = 'https://api.dictionaryapi.dev/api/v2/entries/en';
 
+  // Wiktionary Extract API
+  static String wiktionaryExtract(String word) =>
+      'https://en.wiktionary.org/w/api.php?action=query&titles=${Uri.encodeComponent(word)}&prop=extracts&explaintext=1&format=json';
+
+  // Datamuse API (Definitions, Pronunciations, Synonyms)
+  static String datamuseWord(String word) =>
+      'https://api.datamuse.com/words?sp=${Uri.encodeComponent(word)}&qe=sp&md=dprf';
+
   // Google Translate API (Free endpoint for English -> Vietnamese)
   static const String googleTranslateBase = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t';
 

@@ -71,7 +71,9 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     final pages = [
       const DashboardView(),
-      const DictionaryView(),
+      DictionaryView(
+        onNavigateToNotebook: () => _navigateToIndex(2),
+      ),
       NotebookView(
         onNavigateToDictionary: () => _navigateToIndex(1),
       ),

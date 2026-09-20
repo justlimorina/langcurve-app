@@ -26,6 +26,8 @@ class BbcService {
     ),
   ];
 
+  static List<BbcVideo> get fallbackVideos => List.unmodifiable(_fallbackVideos);
+
   List<BbcVideo>? _cachedVideos;
 
   /// Fetches latest BBC Learning English videos from YouTube RSS feed or fallback

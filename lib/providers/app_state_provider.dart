@@ -16,7 +16,7 @@ class AppStateProvider extends ChangeNotifier {
   List<Vocabulary> _dueVocabularies = [];
   List<Vocabulary> _allVocabularies = [];
   List<CurveDataPoint> _curvePoints = [];
-  List<BbcVideo> _bbcVideos = [];
+  List<BbcVideo> _bbcVideos = List.from(BbcService.fallbackVideos);
 
   Map<String, dynamic> _stats = {
     'totalXp': 0,
@@ -45,6 +45,16 @@ class AppStateProvider extends ChangeNotifier {
   List<String> get recentWords => (_stats['recentWords'] as List<dynamic>? ?? []).cast<String>();
   String get levelTitle => (_stats['levelTitle'] ?? 'Tập sự (Novice)') as String;
 
+  Vocabulary? getSavedVocabulary(String word) {
+    final clean = word.trim().toLowerCase();
+    for (final v in _allVocabularies) {
+      if (v.word.trim().toLowerCase() == clean) {
+        return v;
+      }
+    }
+    return null;
+  }
+
   AppStateProvider() {
     init();
   }
@@ -53,14 +63,18 @@ class AppStateProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    await loadTopics();
-    await refreshStats();
-    await refreshDueVocabularies();
-    await refreshLearningCurve();
-    await refreshBbcVideos();
+    await Future.wait([
+      loadTopics(),
+      refreshStats(),
+      refreshDueVocabularies(),
+      refreshLearningCurve(),
+    ]);
 
     _isLoading = false;
     notifyListeners();
+
+    // Fetch latest BBC RSS in background without blocking UI
+    refreshBbcVideos();
   }
 
   Future<void> loadTopics() async {

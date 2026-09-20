@@ -4,7 +4,9 @@ import '../../services/dictionary_service.dart';
 import 'widgets/word_detail_card.dart';
 
 class DictionaryView extends StatefulWidget {
-  const DictionaryView({super.key});
+  final VoidCallback? onNavigateToNotebook;
+
+  const DictionaryView({super.key, this.onNavigateToNotebook});
 
   @override
   State<DictionaryView> createState() => _DictionaryViewState();
@@ -206,9 +208,17 @@ class _DictionaryViewState extends State<DictionaryView> {
               WordDetailCard(
                 entry: _currentEntry!,
                 onSaved: () {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Đã lưu từ "${_currentEntry!.word}" vào Notebook!'),
+                      behavior: SnackBarBehavior.floating,
+                      action: widget.onNavigateToNotebook != null
+                          ? SnackBarAction(
+                              label: 'Xem Notebook',
+                              onPressed: widget.onNavigateToNotebook!,
+                            )
+                          : null,
                     ),
                   );
                 },
