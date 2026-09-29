@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../core/utils/platform_utils.dart';
 import '../../models/dictionary_entry.dart';
 import '../../services/dictionary_service.dart';
 import 'widgets/word_detail_card.dart';
@@ -32,10 +33,12 @@ class _DictionaryViewState extends State<DictionaryView> {
   @override
   void initState() {
     super.initState();
-    // Auto-focus ô tìm kiếm khi mở màn hình
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _searchFocusNode.requestFocus();
-    });
+    // Chỉ auto-focus ô tìm kiếm trên Desktop, tránh mở bàn phím ảo chiếm màn hình trên Android/iOS
+    if (PlatformUtils.isDesktop) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _searchFocusNode.requestFocus();
+      });
+    }
   }
 
   @override
@@ -291,18 +294,20 @@ class _DictionaryViewState extends State<DictionaryView> {
                             color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        // Keyboard shortcut hint
-                        const Wrap(
-                          alignment: WrapAlignment.center,
-                          spacing: 12,
-                          runSpacing: 8,
-                          children: [
-                            _ShortcutHint(label: 'Ctrl+F', description: 'Focus tìm kiếm'),
-                            _ShortcutHint(label: 'Esc', description: 'Xóa / Bỏ focus'),
-                            _ShortcutHint(label: 'Enter', description: 'Tra từ'),
-                          ],
-                        ),
+                        if (PlatformUtils.isDesktop) ...[
+                          const SizedBox(height: 16),
+                          // Keyboard shortcut hint
+                          const Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 12,
+                            runSpacing: 8,
+                            children: [
+                              _ShortcutHint(label: 'Ctrl+F', description: 'Focus tìm kiếm'),
+                              _ShortcutHint(label: 'Esc', description: 'Xóa / Bỏ focus'),
+                              _ShortcutHint(label: 'Enter', description: 'Tra từ'),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),

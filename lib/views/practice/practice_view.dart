@@ -6,6 +6,14 @@ import '../../models/topic.dart';
 import '../../models/vocabulary.dart';
 import '../../providers/app_state_provider.dart';
 import 'widgets/practice_card.dart';
+import 'widgets/quiz_card.dart';
+import 'widgets/spelling_card.dart';
+
+enum StudyMode {
+  flashcard,
+  quiz,
+  spelling,
+}
 
 class PracticeView extends StatefulWidget {
   final VoidCallback onNavigateToDictionary;
@@ -20,6 +28,7 @@ class PracticeView extends StatefulWidget {
 }
 
 class _PracticeViewState extends State<PracticeView> {
+  StudyMode _selectedMode = StudyMode.flashcard;
   List<Vocabulary> _studyWords = [];
   int _studyIndex = 0;
   String _sessionTitle = '';
@@ -100,8 +109,11 @@ class _PracticeViewState extends State<PracticeView> {
     );
 
     int earned = 0;
-    if (quality == 5) earned = 20;
-    else if (quality >= 3) earned = 10;
+    if (quality == 5) {
+      earned = 20;
+    } else if (quality >= 3) {
+      earned = 10;
+    }
     _sessionEarnedXp += earned;
 
     if (mounted) {
@@ -163,14 +175,40 @@ class _PracticeViewState extends State<PracticeView> {
                 ],
               ),
               const SizedBox(height: 16),
-              PracticeCard(
-                vocabulary: currentVocab,
-                currentIndex: _studyIndex,
-                totalWords: _studyWords.length,
-                topicName: _sessionTitle,
-                onRecordReview: _handleReview,
-                onSkip: _handleSkip,
-              ),
+
+              // Active Card based on StudyMode
+              if (_selectedMode == StudyMode.quiz)
+                QuizCard(
+                  key: ValueKey('quiz_${currentVocab.id}'),
+                  vocabulary: currentVocab,
+                  allVocabularies: appState.allVocabularies,
+                  currentIndex: _studyIndex,
+                  totalWords: _studyWords.length,
+                  topicName: _sessionTitle,
+                  onRecordReview: _handleReview,
+                  onSkip: _handleSkip,
+                )
+              else if (_selectedMode == StudyMode.spelling)
+                SpellingCard(
+                  key: ValueKey('spelling_${currentVocab.id}'),
+                  vocabulary: currentVocab,
+                  currentIndex: _studyIndex,
+                  totalWords: _studyWords.length,
+                  topicName: _sessionTitle,
+                  onRecordReview: _handleReview,
+                  onSkip: _handleSkip,
+                )
+              else
+                PracticeCard(
+                  key: ValueKey('card_${currentVocab.id}'),
+                  vocabulary: currentVocab,
+                  currentIndex: _studyIndex,
+                  totalWords: _studyWords.length,
+                  topicName: _sessionTitle,
+                  onRecordReview: _handleReview,
+                  onSkip: _handleSkip,
+                ),
+
               const SizedBox(height: 16),
               Center(
                 child: TextButton.icon(
@@ -264,15 +302,61 @@ class _PracticeViewState extends State<PracticeView> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Ghi nhớ từ vựng lâu bền thông qua thuật toán lặp lại ngắt quãng SuperMemo SM-2 và thực hành tự đặt câu ví dụ.',
+              'Ghi nhớ từ vựng lâu bền thông qua phương pháp lặp lại ngắt quãng SM-2, trắc nghiệm và gõ chính tả.',
               style: TextStyle(
                 fontSize: 14,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
+            const SizedBox(height: 20),
+
+            // Study Mode Selector
+            Text(
+              'Chế độ luyện tập:',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isCompact = constraints.maxWidth < 500;
+                return SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<StudyMode>(
+                    segments: [
+                      ButtonSegment<StudyMode>(
+                        value: StudyMode.flashcard,
+                        icon: const Icon(Icons.style_outlined),
+                        label: Text(isCompact ? 'Lật thẻ' : 'Lật thẻ (SM-2)'),
+                      ),
+                      ButtonSegment<StudyMode>(
+                        value: StudyMode.quiz,
+                        icon: const Icon(Icons.quiz_outlined),
+                        label: Text(isCompact ? 'Quiz' : 'Trắc nghiệm'),
+                      ),
+                      ButtonSegment<StudyMode>(
+                        value: StudyMode.spelling,
+                        icon: const Icon(Icons.edit_note_outlined),
+                        label: Text(isCompact ? 'Chính tả' : 'Gõ chính tả'),
+                      ),
+                    ],
+                    selected: {_selectedMode},
+                    onSelectionChanged: (Set<StudyMode> newSelection) {
+                      setState(() {
+                        _selectedMode = newSelection.first;
+                      });
+                    },
+                  ),
+                );
+              },
+            ),
+
             const SizedBox(height: 24),
 
-            // Mode 1: SRS Due Review Banner
+            // Option 1: SRS Due Review Banner
             Card(
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -280,12 +364,12 @@ class _PracticeViewState extends State<PracticeView> {
                 side: BorderSide(
                   color: dueWords.isNotEmpty
                       ? theme.colorScheme.primary
-                      : theme.colorScheme.outlineVariant.withOpacity(0.5),
+                      : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
                   width: dueWords.isNotEmpty ? 2 : 1,
                 ),
               ),
               color: dueWords.isNotEmpty
-                  ? theme.colorScheme.primaryContainer.withOpacity(0.3)
+                  ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
                   : theme.colorScheme.surfaceContainerLow,
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -364,12 +448,12 @@ class _PracticeViewState extends State<PracticeView> {
 
             const SizedBox(height: 16),
 
-            // Mode 2: Practice All Words
+            // Option 2: Practice All Words
             Card(
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+                side: BorderSide(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -422,7 +506,7 @@ class _PracticeViewState extends State<PracticeView> {
 
             const SizedBox(height: 28),
 
-            // Mode 3: Practice by Topic
+            // Option 3: Practice by Topic
             Text(
               'Hoặc luyện tập theo từng chủ đề:',
               style: TextStyle(
@@ -454,7 +538,7 @@ class _PracticeViewState extends State<PracticeView> {
                   return ListTile(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.4)),
+                      side: BorderSide(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4)),
                     ),
                     leading: CircleAvatar(
                       backgroundColor: theme.colorScheme.primaryContainer,

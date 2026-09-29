@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/utils/lemmatizer.dart';
+import '../../../core/utils/platform_utils.dart';
 import '../../../models/grammar_match.dart';
 import '../../../models/vocabulary.dart';
 import '../../../services/grammar_service.dart';
@@ -391,36 +392,40 @@ class _PracticeCardState extends State<PracticeCard> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                // Keyboard hint khi chưa lật thẻ
-                Center(
-                  child: Text(
-                    '[ Space ] — Lật thẻ & chấm điểm',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: theme.colorScheme.outlineVariant,
-                      fontStyle: FontStyle.italic,
+                if (PlatformUtils.isDesktop) ...[
+                  const SizedBox(height: 8),
+                  // Keyboard hint khi chưa lật thẻ
+                  Center(
+                    child: Text(
+                      '[ Space ] — Lật thẻ & chấm điểm',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: theme.colorScheme.outlineVariant,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ] else ...[
                 SrsRatingBar(
                   onRatingSelected: (quality) {
                     _submitSentenceAndRate(quality);
                   },
                 ),
-                const SizedBox(height: 8),
-                // Keyboard hint khi đang chọn điểm
-                Center(
-                  child: Text(
-                    '[ 1 ] Chưa nhớ  [ 2 ] Khó  [ 3 ] Tốt  [ 4 ] Rất dễ',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: theme.colorScheme.outlineVariant,
-                      fontStyle: FontStyle.italic,
+                if (PlatformUtils.isDesktop) ...[
+                  const SizedBox(height: 8),
+                  // Keyboard hint khi đang chọn điểm
+                  Center(
+                    child: Text(
+                      '[ 1 ] Chưa nhớ  [ 2 ] Khó  [ 3 ] Tốt  [ 4 ] Rất dễ',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: theme.colorScheme.outlineVariant,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
             ],
           ),
