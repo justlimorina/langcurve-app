@@ -341,7 +341,10 @@ class DatabaseService {
   Future<Map<String, dynamic>> getDashboardStats() async {
     final db = await database;
     final totalWordsRes = await db.rawQuery('SELECT COUNT(*) AS total FROM vocabularies');
-    final totalExamplesRes = await db.rawQuery('SELECT COUNT(*) AS total FROM vocabularies WHERE user_example IS NOT NULL AND user_example != ""');
+    final totalExamplesRes = await db.rawQuery(
+      'SELECT COUNT(*) AS total FROM vocabularies WHERE user_example IS NOT NULL AND trim(user_example) != ?',
+      [''],
+    );
     final profile = await getUserProfile();
     final recentWordsRes = await db.query(
       'vocabularies',
